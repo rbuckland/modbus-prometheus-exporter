@@ -1,29 +1,48 @@
-DOCKERUN_TINYGO    := docker run --rm -ti -v $(PWD):/go/src --privileged -v /dev/ttyACM0:/dev/ttyACM0 --workdir /go/src inosion/tinygo-dev-extra
-DOCKER_ARDUINO_CLI := docker run --rm -ti -v $(PWD):/v --workdir /v arduino/arduino-cli
+include tooling.makefile
 
-all: compile
+IMAGE=inosion/arduino-build
+DOCKER_OPTS := -v /dev:/dev
 
-compile: blinky.go
-	$(DOCKERUN) tinygo build -target arduino -o build/blinky.hex blinky.go 
+TARGET = modbus-prometheus-exporter
+ARDUINO_DIR  = /usr/share/arduino
+AVR_TOOLS_PATH = /usr/bin
 
-flash: build/blinky.hex
-	# $(DOCKERUN) bash -c "stty -F /dev/ttyACM0 ispeed 1200 ospeed 1200 && avrdude -C/etc/avrdude.conf -patmega32u4 -cavr109 -v -v -v -v -P/dev/ttyACM0 -b57600 -D -Uflash:w:build/blinky.hex:i"
-	# python reset-leonardo.py /dev/ttyACM0
-	# sleep 2
-	# $(DOCKERUN) 
-	# avrdude -patmega32u4 -cavr109 -v -v -v -v -P/dev/ttyACM0 -b57600 -D -Uflash:w:build/blinky.hex:i
-	avrdude avrdude -p m2560 -c stk500v2 -vvv -P /dev/ttyACM0 -b115200 -D -F -U flash:w:build/blinky.hex:i
-# flash -target arduino build/blinky.hex
-# avrdude -c arduino -p atmega328p -P /dev/ttyACM0 -U flash:w:build/arduino-colorlamp.hex
+#
+# setup project local stuff
+#
+ARDUINO_LIBS = protothreads-arduino
+BOARD_TAG    = uno  # for mega use mega2560
+ARDUINO_PORT = /dev/ttyACM0  # change this to the port used by your board
+ARDUINO_SKETCHBOOK = $(realpath .)
 
-flash-mega:
-	$(DOCKERUN) tinygo flash -target arduino-mega2560 blinky.go
+inosion/arduino-build:
+ifneq ($(IN_NESTED_DOCKER),yes)
+	docker build -t $(IMAGE) .
+endif
 
-flash-uno:
-	$(DOCKERUN) tinygo flash -target arduino blinky.go	
+##RUN_IN_IMAGE: inosion/arduino-build
+code-upload: docker-nested-run
+ifeq ($(IN_NESTED_DOCKER),yes)
+	device=$(shell ls -lt /dev/ttyACM* | tail)
+	@echo "uploading to $(device)"
+	$(MAKE) arduino=$(device) upload
+endif
 
-flash-leo:
-	# python reset-leonardo.py /dev/ttyACM0
-	# sleep 1
-	# $(DOCKERUN) tinygo flash -target arduino blinky.go
-	$(DOCKERUNR) avrdude -patmega32u4 -cavr109 -vvvv -P /dev/ttyACM0 -b 57600 -D -Uflash:w:build/blinky.hex:i
+##RUN_IN_IMAGE: inosion/arduino-build
+echo: docker-nested-run
+ifeq ($(IN_NESTED_DOCKER),yes)
+	@echo hello
+endif
+
+##RUN_IN_IMAGE: inosion/arduino-build
+shell: docker-nested-run
+ifeq ($(IN_NESTED_DOCKER),yes)
+	bash
+endif
+
+
+.PHONY: clean
+clean::
+	rm -rf build-*/ 2&1> /dev/null
+
+-include /usr/local/Arduino-Makefile/Arduino.mk
