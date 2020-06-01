@@ -1,7 +1,7 @@
 include tooling.makefile
 
 IMAGE=inosion/arduino-build
-DOCKER_OPTS := -v /dev:/dev
+DOCKER_OPTS := -v /dev:/dev --privileged # --user $$(id -u):$$(id -g)
 
 TARGET = modbus-prometheus-exporter
 ARDUINO_DIR  = /usr/share/arduino
@@ -10,7 +10,7 @@ AVR_TOOLS_PATH = /usr/bin
 #
 # setup project local stuff
 #
-ARDUINO_LIBS = protothreads-arduino
+ARDUINO_LIBS = protothreads-arduino SPI Ethernet
 BOARD_TAG    = uno  # for mega use mega2560
 ARDUINO_PORT = /dev/ttyACM0  # change this to the port used by your board
 ARDUINO_SKETCHBOOK = $(realpath .)
@@ -23,7 +23,8 @@ endif
 ##RUN_IN_IMAGE: inosion/arduino-build
 code-upload: docker-nested-run
 ifeq ($(IN_NESTED_DOCKER),yes)
-	device=$(shell ls -lt /dev/ttyACM* | tail)
+	device=$(shell ls  /dev/ttyACM* | tail)
+	ls -al /dev/ttyA*
 	@echo "uploading to $(device)"
 	$(MAKE) arduino=$(device) upload
 endif
@@ -35,14 +36,9 @@ ifeq ($(IN_NESTED_DOCKER),yes)
 endif
 
 ##RUN_IN_IMAGE: inosion/arduino-build
-shell: docker-nested-run
-ifeq ($(IN_NESTED_DOCKER),yes)
-	bash
-endif
+clean:: docker-nested-run 
 
-
-.PHONY: clean
-clean::
-	rm -rf build-*/ 2&1> /dev/null
+##RUN_IN_IMAGE: inosion/arduino-build
+do-compile: | docker-nested-run compile
 
 -include /usr/local/Arduino-Makefile/Arduino.mk

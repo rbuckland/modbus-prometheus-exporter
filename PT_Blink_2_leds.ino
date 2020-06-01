@@ -3,7 +3,7 @@
 #include <timer.h> // Libery for the timer
 
 #define LEDPIN1 13 // Definition of the led pin 1
-#define LEDPIN2 17 // Definition of the led pin 2
+#define LEDPIN2 13 // Definition of the led pin 2
 
 // Struct that keep a protothread instance
 static struct pt pt1; // Instance of protothread for led 1
@@ -24,8 +24,8 @@ void setup(){
   PT_INIT(&pt2);
   
   // Set the time for each timer
-  timer_set(&t1, 1*CLOCK_SECOND); // 1000ms for the led 1
-  timer_set(&t2, 0.9*CLOCK_SECOND); // 900ms for the led 2
+  timer_set(&t1, 0.3145678*CLOCK_SECOND); // 1000ms for the led 1
+  timer_set(&t2, 0.13*CLOCK_SECOND); // 900ms for the led 2
   
 }
 
