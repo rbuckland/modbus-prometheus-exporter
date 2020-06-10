@@ -11,13 +11,10 @@ byte mac[] = {
 IPAddress ip(10,8,8,33);
 #define LEDPIN 13 // Definition of the led pin that will blink
 
-
-
 // Initialize the Ethernet server library
 // with the IP address and port you want to use 
 // (port 80 is default for HTTP):
 EthernetServer server(80);
-
 
 void webserver() {
   // listen for incoming clients

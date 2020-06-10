@@ -1,8 +1,13 @@
-# 
+# modbus-prometheus-exporter
 
-# Arduino Leonardo - Ubuntu 
+An Arduino ModBus Data Prometheus Exporter
 
-Besides the "ttywACM0 reset" .. you need to uninstall the modemmanager
+
+## Notes and Tipes
+
+Leonardo and Ubuntu
+
+Besides the "ttyACM0 reset" .. you need to uninstall the modemmanager
 
 `sudo apt purge modemmanager`
 
